@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023-2025  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "nutt/zigbee.h"
+#include "mist/zigbee.h"
 
 #include <esp_err.h>
 #include <esp_ieee802154_types.h>
@@ -39,8 +39,8 @@ extern "C" {
 #include <utility>
 #include <vector>
 
-#include "nutt/ota.h"
-#include "nutt/thread.h"
+#include "mist/ota.h"
+#include "mist/thread.h"
 
 /* Check compatibility of esp-zigbee-lib and esp-zboss-lib with the current IDF */
 static_assert(sizeof(esp_ieee802154_frame_info_t) >= 16);
@@ -52,13 +52,13 @@ static_assert(offsetof(esp_ieee802154_frame_info_t, lqi) == 4);
 static_assert(offsetof(esp_ieee802154_frame_info_t, timestamp) == 8);
 
 extern "C" void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
-	nutt::ZigbeeDevice::instance_->signal_handler(
+	mist::ZigbeeDevice::instance_->signal_handler(
 		static_cast<esp_zb_app_signal_type_t>(*signal_struct->p_app_signal),
 		signal_struct->esp_err_status,
 		esp_zb_app_signal_get_params(signal_struct->p_app_signal));
 }
 
-namespace nutt {
+namespace mist {
 
 ZigbeeDevice *ZigbeeDevice::instance_{nullptr};
 
@@ -960,9 +960,9 @@ void ZigbeeCluster::update_attr_value(uint16_t attr_id, void *value) {
 	esp_zb_zcl_set_attribute_val(ep_->id(), id_, role_, attr_id, value, false);
 }
 
-} // namespace nutt
+} // namespace mist
 
-using namespace nutt;
+using namespace mist;
 
 /*
  * Workaround for zb_zcl_send_report_attr_command() being called with

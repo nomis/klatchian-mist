@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023-2025  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "nutt/light.h"
+#include "mist/light.h"
 
 #include <esp_crc.h>
 #include <esp_err.h>
@@ -33,16 +33,16 @@
 #include <string>
 #include <thread>
 
-#include "nutt/debounce.h"
-#include "nutt/device.h"
-#include "nutt/ui.h"
-#include "nutt/util.h"
+#include "mist/debounce.h"
+#include "mist/device.h"
+#include "mist/ui.h"
+#include "mist/util.h"
 
 #ifndef ESP_ZB_HA_ON_OFF_LIGHT_SWITCH_DEVICE_ID
 # define ESP_ZB_HA_ON_OFF_LIGHT_SWITCH_DEVICE_ID (static_cast<esp_zb_ha_standard_devices_t>(0x0103))
 #endif
 
-namespace nutt {
+namespace mist {
 
 std::unique_ptr<nvs::NVSHandle> Light::nvs_;
 
@@ -585,4 +585,4 @@ void PersistentEnableCluster::updated_value(bool state) {
 
 } // namespace light
 
-} // namespace nutt
+} // namespace mist

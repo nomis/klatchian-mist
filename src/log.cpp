@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "nutt/log.h"
+#include "mist/log.h"
 
 #include <esp_log.h>
 #include <nvs.h>
@@ -24,15 +24,15 @@
 
 #include <memory>
 
-#include "nutt/main.h"
-#include "nutt/device.h"
-#include "nutt/light.h"
-#include "nutt/ota.h"
-#include "nutt/thread.h"
-#include "nutt/ui.h"
-#include "nutt/zigbee.h"
+#include "mist/main.h"
+#include "mist/device.h"
+#include "mist/light.h"
+#include "mist/ota.h"
+#include "mist/thread.h"
+#include "mist/ui.h"
+#include "mist/zigbee.h"
 
-namespace nutt {
+namespace mist {
 
 std::unique_ptr<nvs::NVSHandle> Logging::nvs_;
 
@@ -67,14 +67,14 @@ void Logging::set_app_level(esp_log_level_t level) {
 }
 
 void Logging::configure_app(esp_log_level_t level) {
-	esp_log_level_set(nutt::TAG, level);
-	esp_log_level_set(nutt::CompressedOTA::TAG, level);
-	esp_log_level_set(nutt::Device::TAG, level);
-	esp_log_level_set(nutt::Light::TAG, level);
-	esp_log_level_set(nutt::UserInterface::TAG, level);
-	esp_log_level_set(nutt::ZigbeeDevice::TAG, level);
-	esp_log_level_set(nutt::ZigbeeCluster::TAG, level);
-	esp_log_level_set(nutt::WakeupThread::TAG, level);
+	esp_log_level_set(mist::TAG, level);
+	esp_log_level_set(mist::CompressedOTA::TAG, level);
+	esp_log_level_set(mist::Device::TAG, level);
+	esp_log_level_set(mist::Light::TAG, level);
+	esp_log_level_set(mist::UserInterface::TAG, level);
+	esp_log_level_set(mist::ZigbeeDevice::TAG, level);
+	esp_log_level_set(mist::ZigbeeCluster::TAG, level);
+	esp_log_level_set(mist::WakeupThread::TAG, level);
 }
 
 void Logging::set_sys_level(esp_log_level_t level) {
@@ -137,4 +137,4 @@ void Logging::sys_level_nvs(esp_log_level_t level) {
 	}
 }
 
-} // namespace nutt
+} // namespace mist

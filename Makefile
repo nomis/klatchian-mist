@@ -40,11 +40,11 @@ cppcheck:
 pipenv:
 	+$(MAKE) -C $(PIPENV) -L
 
-build/candle-dribbler.ota: build/candle-dribbler.bin build/config/sdkconfig.h bin/create-ota.py Makefile | build pipenv
+build/klatchian-mist.ota: build/klatchian-mist.bin build/config/sdkconfig.h bin/create-ota.py Makefile | build pipenv
 	rm -f $@~
 	$(PYTHON) bin/create-ota.py \
-		-m $(shell grep -F CONFIG_NUTT_OTA_MANUFACTURER_ID build/config/sdkconfig.h | cut -d ' ' -f 3) \
-		-i $(shell grep -F CONFIG_NUTT_OTA_IMAGE_TYPE_ID build/config/sdkconfig.h | cut -d ' ' -f 3) \
-		-v $(shell grep -F CONFIG_NUTT_OTA_FILE_VERSION build/config/sdkconfig.h | cut -d ' ' -f 3) \
+		-m $(shell grep -F CONFIG_MIST_OTA_MANUFACTURER_ID build/config/sdkconfig.h | cut -d ' ' -f 3) \
+		-i $(shell grep -F CONFIG_MIST_OTA_IMAGE_TYPE_ID build/config/sdkconfig.h | cut -d ' ' -f 3) \
+		-v $(shell grep -F CONFIG_MIST_OTA_FILE_VERSION build/config/sdkconfig.h | cut -d ' ' -f 3) \
 		-- $< $@~
 	mv $@~ $@

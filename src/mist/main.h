@@ -1,6 +1,6 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
- * Copyright 2023  Simon Arlott
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
+ * Copyright 2023-2024  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,22 @@
 
 #pragma once
 
-#include <cstring>
-#include <string>
-#include <string_view>
+#include <cstddef>
+#include <sdkconfig.h>
 
-namespace nutt {
+namespace mist {
 
-std::string duration_us_to_string(uint64_t duration_us);
+static constexpr const char *TAG = "mist";
+static constexpr const size_t MAX_LIGHTS = 1;
 
-template<typename T, size_t size>
-static inline std::string null_terminated_string(T(&data)[size]) {
-	T *found = reinterpret_cast<T*>(std::memchr(&data[0], '\0', size));
-	return std::string{&data[0], found ? (found - &data[0]) : size};
-};
+#ifndef CONFIG_NUTT_SWITCH_ACTIVE_LOW
+#define CONFIG_NUTT_SWITCH_ACTIVE_LOW 0
+#endif
+static constexpr const bool SWITCH_ACTIVE_LOW = CONFIG_NUTT_SWITCH_ACTIVE_LOW;
 
-} // namespace nutt
+#ifndef CONFIG_NUTT_RELAY_ACTIVE_LOW
+#define CONFIG_NUTT_RELAY_ACTIVE_LOW 0
+#endif
+static constexpr const bool RELAY_ACTIVE_LOW = CONFIG_NUTT_RELAY_ACTIVE_LOW;
+
+} // namespace mist

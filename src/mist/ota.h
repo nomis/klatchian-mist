@@ -1,6 +1,6 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
- * Copyright 2023-2024  Simon Arlott
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
+ * Copyright 2023  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,31 @@
 
 #pragma once
 
-#include <cstddef>
-#include <sdkconfig.h>
+#include <esp_ota_ops.h>
+#include <zlib.h>
 
-namespace nutt {
+#include <memory>
 
-static constexpr const char *TAG = "nutt";
-static constexpr const size_t MAX_LIGHTS = CONFIG_NUTT_MAX_LIGHTS;
+namespace mist {
 
-#ifndef CONFIG_NUTT_SWITCH_ACTIVE_LOW
-#define CONFIG_NUTT_SWITCH_ACTIVE_LOW 0
-#endif
-static constexpr const bool SWITCH_ACTIVE_LOW = CONFIG_NUTT_SWITCH_ACTIVE_LOW;
+class CompressedOTA {
+public:
+	static constexpr const char *TAG = "mist.OTA";
 
-#ifndef CONFIG_NUTT_RELAY_ACTIVE_LOW
-#define CONFIG_NUTT_RELAY_ACTIVE_LOW 0
-#endif
-static constexpr const bool RELAY_ACTIVE_LOW = CONFIG_NUTT_RELAY_ACTIVE_LOW;
+	CompressedOTA() = default;
+	~CompressedOTA();
 
-} // namespace nutt
+	bool start();
+	bool write(const uint8_t *data, size_t size);
+	bool finish();
+
+private:
+	bool write(const uint8_t *data, size_t size, bool flush);
+
+	bool zlib_init_{false};
+	z_stream zlib_stream_;
+	const esp_partition_t *part_{nullptr};
+	esp_ota_handle_t handle_{0};
+};
+
+} // namespace mist

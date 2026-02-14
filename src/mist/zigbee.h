@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023-2024  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@
 #include <utility>
 #include <vector>
 
-namespace nutt {
+namespace mist {
 
 using ep_id_t = uint8_t;
 
@@ -84,7 +84,7 @@ protected:
 	~ZigbeeCluster() = default;
 
 public:
-	static constexpr const char *TAG = "nutt.ZigbeeCluster";
+	static constexpr const char *TAG = "mist.ZigbeeCluster";
 
 	inline uint16_t id() const { return id_; }
 	inline esp_zb_zcl_cluster_role_t role() const { return role_; }
@@ -193,7 +193,7 @@ public:
 	explicit ZigbeeDevice(ZigbeeListener &listener);
 	~ZigbeeDevice() = delete;
 
-	static constexpr const char *TAG = "nutt.ZigbeeDevice";
+	static constexpr const char *TAG = "mist.ZigbeeDevice";
 
 	void add(ZigbeeEndpoint &endpoint);
 	void start();
@@ -286,4 +286,4 @@ public:
 	virtual void zigbee_neighbours_updated(const std::shared_ptr<const std::vector<ZigbeeNeighbour>> &neighbours) {};
 };
 
-} // namespace nutt
+} // namespace mist

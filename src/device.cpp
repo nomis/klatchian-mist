@@ -1,6 +1,6 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
- * Copyright 2023-2024  Simon Arlott
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
+ * Copyright 2023-2024,2026  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "nutt/device.h"
+#include "mist/device.h"
 
 #include <esp_app_desc.h>
 #include <esp_chip_info.h>
@@ -38,24 +38,22 @@
 #include <unordered_map>
 #include <vector>
 
-#include "nutt/base64.h"
-#include "nutt/main.h"
-#include "nutt/light.h"
-#include "nutt/thread.h"
-#include "nutt/ui.h"
-#include "nutt/util.h"
-#include "nutt/zigbee.h"
+#include "mist/base64.h"
+#include "mist/main.h"
+#include "mist/light.h"
+#include "mist/thread.h"
+#include "mist/ui.h"
+#include "mist/util.h"
+#include "mist/zigbee.h"
 
 using namespace std::chrono_literals;
 
-namespace nutt {
+namespace mist {
 
 Device::Device(UserInterface &ui) : WakeupThread("Device", true), ui_(ui),
 		zigbee_(*new ZigbeeDevice{*this}),
-		basic_cl_(*this, "uuid.uk",
-			(MAX_LIGHTS > 0 || !ZigbeeDevice::ROUTER)
-				? "candle-dribbler" : "router",
-			"https://github.com/nomis/candle-dribbler"),
+		basic_cl_(*this, "uuid.uk", "klatchian-mist",
+			"https://github.com/nomis/klatchian-mist"),
 		identify_cl_(ui_) {
 	uptime_task_ = std::make_shared<std::function<void()>>([this] {
 		uint32_t next_ms = uptime_cl_.update(core_dump_present_);
@@ -880,4 +878,4 @@ void SoftwareCluster::reload_app_info(bool full) {
 
 } // namespace device
 
-} // namespace nutt
+} // namespace mist

@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "nutt/debounce.h"
+#include "mist/debounce.h"
 
 #include <driver/gpio.h>
 
-#include "nutt/thread.h"
+#include "mist/thread.h"
 
-namespace nutt {
+namespace mist {
 
 Debounce::Debounce(gpio_num_t pin, bool active_low, unsigned long duration_us)
 		: Debounce(pin, active_low, duration_us, duration_us) {
@@ -104,4 +104,4 @@ void Debounce::interrupt_handler() {
 	wakeup_->wake_up_isr();
 }
 
-} // namespace nutt
+} // namespace mist

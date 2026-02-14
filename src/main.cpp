@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "nutt/main.h"
+#include "mist/main.h"
 
 #include <esp_err.h>
 #include <esp_log.h>
@@ -24,14 +24,14 @@
 #include <nvs_flash.h>
 #include <driver/gpio.h>
 
-#include "nutt/device.h"
-#include "nutt/log.h"
-#include "nutt/light.h"
-#include "nutt/ui.h"
+#include "mist/device.h"
+#include "mist/log.h"
+#include "mist/light.h"
+#include "mist/ui.h"
 
-using namespace nutt;
+using namespace mist;
 
-static_assert(nutt::Device::NUM_EP_PER_DEVICE + MAX_LIGHTS * nutt::Light::NUM_EP_PER_LIGHT <= ZB_MAX_EP_NUMBER,
+static_assert(mist::Device::NUM_EP_PER_DEVICE + MAX_LIGHTS * mist::Light::NUM_EP_PER_LIGHT <= ZB_MAX_EP_NUMBER,
 	"You'll need to ask Espressif to let you use more endpoints");
 
 extern "C" void app_main() {

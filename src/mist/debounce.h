@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@
 
 #include <atomic>
 
-namespace nutt {
+namespace mist {
 
 class WakeupThread;
 
@@ -69,4 +69,4 @@ private:
 	std::atomic<unsigned long> change_count_irq_{0};
 };
 
-} // namespace nutt
+} // namespace mist

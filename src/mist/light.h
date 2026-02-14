@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023-2024  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@
 #include "main.h"
 #include "zigbee.h"
 
-namespace nutt {
+namespace mist {
 
 class Light;
 
@@ -68,7 +68,7 @@ public:
 		const esp_zb_zcl_attribute_data_t *value) override;
 
 protected:
-	static constexpr const char *TAG = "nutt.Light";
+	static constexpr const char *TAG = "mist.Light";
 
 	void configure_light_cluster_list(esp_zb_cluster_list_t &cluster_list);
 	void configure_switch_cluster_list(esp_zb_cluster_list_t &cluster_list);
@@ -166,7 +166,7 @@ public:
 		gpio_num_t relay_pin, bool relay_active_low);
 	~Light() = delete;
 
-	static constexpr const char *TAG = "nutt.Light";
+	static constexpr const char *TAG = "mist.Light";
 	static constexpr const size_t NUM_EP_PER_LIGHT = 6;
 
 	inline uint8_t index() const { return index_; }
@@ -254,4 +254,4 @@ private:
 	Device *device_{nullptr};
 };
 
-} // namespace nutt
+} // namespace mist

@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,14 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "nutt/util.h"
+#include "mist/util.h"
 
 #include <stdio.h>
 
 #include <string>
 #include <vector>
 
-namespace nutt {
+namespace mist {
 
 std::string duration_us_to_string(uint64_t duration_us) {
 	uint64_t duration_ms = duration_us / 1000U;
@@ -52,4 +52,4 @@ std::string duration_us_to_string(uint64_t duration_us) {
 	return {data.data()};
 }
 
-} // namespace nutt
+} // namespace mist

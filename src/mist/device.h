@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023-2024  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -31,7 +31,7 @@
 #include "thread.h"
 #include "zigbee.h"
 
-namespace nutt {
+namespace mist {
 
 class Device;
 class Light;
@@ -49,7 +49,7 @@ public:
 	void reload_app_info();
 
 private:
-	static constexpr const char *TAG = "nutt.Device";
+	static constexpr const char *TAG = "mist.Device";
 	static uint8_t power_source_;
 	static uint8_t device_class_;
 	static uint8_t device_type_;
@@ -176,7 +176,7 @@ public:
 	void reload_app_info(bool full);
 
 private:
-	static constexpr const char *TAG = "nutt.Device";
+	static constexpr const char *TAG = "mist.Device";
 
 	Device &device_;
 	size_t index_;
@@ -190,7 +190,7 @@ public:
 	~Device() = delete;
 
 	// cppcheck-suppress duplInheritedMember
-	static constexpr const char *TAG = "nutt.Device";
+	static constexpr const char *TAG = "mist.Device";
 	/* Assumes 2 OTA partitions are configured */
 	static constexpr const size_t NUM_EP_PER_DEVICE = 5;
 	static constexpr const size_t MAX_DATE_CODE_LENGTH = 16;
@@ -254,4 +254,4 @@ private:
 	std::atomic<bool> core_dump_present_{false};
 };
 
-} // namespace nutt
+} // namespace mist

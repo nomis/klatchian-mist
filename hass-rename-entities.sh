@@ -1,8 +1,8 @@
 #!/bin/bash
 if [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ]; then
-	echo "Usage: $0 <old suffix|-> <new id> <new name> <light> [light] [light] [light]"
+	echo "Usage: $0 <old suffix|-> <new id> <new name>"
 	echo
-	echo "Example: $0 uuid_uk_candle_dribbler candle_dribbler_1 \"Candle Dribbler 1\" A B C D"
+	echo "Example: $0 uuid_uk_klatchian_mist klatchian_mist_1 \"Klatchian Mist 1\""
 	exit 1
 fi
 OLD="$1"

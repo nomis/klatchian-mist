@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,7 +30,7 @@
 #include "debounce.h"
 #include "thread.h"
 
-namespace nutt {
+namespace mist {
 
 class Device;
 class Logging;
@@ -106,7 +106,7 @@ public:
 	~UserInterface() = delete;
 
 	// cppcheck-suppress duplInheritedMember
-	static constexpr const char *TAG = "nutt.UI";
+	static constexpr const char *TAG = "mist.UI";
 
 	void attach(Device &device);
 	void start();
@@ -121,7 +121,7 @@ public:
 private:
 	static constexpr const unsigned long DEBOUNCE_PRESS_US = 100 * 1000;
 	static constexpr const unsigned long DEBOUNCE_RELEASE_US = 1 * 1000 * 1000;
-	static constexpr const uint8_t LED_LEVEL = CONFIG_NUTT_UI_LED_BRIGHTNESS;
+	static constexpr const uint8_t LED_LEVEL = CONFIG_MIST_UI_LED_BRIGHTNESS;
 	static const std::unordered_map<ui::Event,ui::LEDSequence> led_sequences_;
 
 	unsigned long run_tasks() override;
@@ -152,4 +152,4 @@ private:
 	std::unordered_map<ui::Event,ui::LEDSequence> active_sequence_;
 };
 
-} // namespace nutt
+} // namespace mist

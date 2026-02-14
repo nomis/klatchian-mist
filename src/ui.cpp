@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023-2024  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "nutt/ui.h"
+#include "mist/ui.h"
 
 #include <esp_err.h>
 #include <esp_heap_caps.h>
@@ -39,12 +39,12 @@ extern "C" {
 #include <thread>
 #include <unordered_map>
 
-#include "nutt/debounce.h"
-#include "nutt/device.h"
-#include "nutt/log.h"
-#include "nutt/zigbee.h"
+#include "mist/debounce.h"
+#include "mist/device.h"
+#include "mist/log.h"
+#include "mist/zigbee.h"
 
-namespace nutt {
+namespace mist {
 
 using namespace ui;
 using namespace ui::colour;
@@ -72,9 +72,9 @@ const std::unordered_map<Event,LEDSequence> UserInterface::led_sequences_{
 	{ Event::NETWORK_UNCONFIGURED_FAILED,          {    0, { { RED, 500 }, { OFF, 500 }     } } },
 };
 
-} // namespace nutt
+} // namespace mist
 
-namespace nutt {
+namespace mist {
 
 namespace colour = ui::colour;
 using ui::Event;
@@ -432,4 +432,4 @@ void UserInterface::core_dump(bool present) {
 	wake_up();
 }
 
-} // namespace nutt
+} // namespace mist

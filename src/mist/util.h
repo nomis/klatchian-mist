@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,31 +18,18 @@
 
 #pragma once
 
-#include <esp_ota_ops.h>
-#include <zlib.h>
+#include <cstring>
+#include <string>
+#include <string_view>
 
-#include <memory>
+namespace mist {
 
-namespace nutt {
+std::string duration_us_to_string(uint64_t duration_us);
 
-class CompressedOTA {
-public:
-	static constexpr const char *TAG = "nutt.OTA";
-
-	CompressedOTA() = default;
-	~CompressedOTA();
-
-	bool start();
-	bool write(const uint8_t *data, size_t size);
-	bool finish();
-
-private:
-	bool write(const uint8_t *data, size_t size, bool flush);
-
-	bool zlib_init_{false};
-	z_stream zlib_stream_;
-	const esp_partition_t *part_{nullptr};
-	esp_ota_handle_t handle_{0};
+template<typename T, size_t size>
+static inline std::string null_terminated_string(T(&data)[size]) {
+	T *found = reinterpret_cast<T*>(std::memchr(&data[0], '\0', size));
+	return std::string{&data[0], found ? (found - &data[0]) : size};
 };
 
-} // namespace nutt
+} // namespace mist

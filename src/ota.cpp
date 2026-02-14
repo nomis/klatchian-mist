@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,14 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "nutt/ota.h"
+#include "mist/ota.h"
 
 #include <esp_err.h>
 #include <esp_log.h>
 #include <esp_ota_ops.h>
 #include <zlib.h>
 
-namespace nutt {
+namespace mist {
 
 CompressedOTA::~CompressedOTA() {
 	if (part_) {
@@ -153,4 +153,4 @@ bool CompressedOTA::finish() {
 	return true;
 }
 
-} // namespace nutt
+} // namespace mist

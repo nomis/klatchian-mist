@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023-2024  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@
 #include <thread>
 #include <utility>
 
-namespace nutt {
+namespace mist {
 
 template<class Function, class... Args>
 void make_thread(std::thread &t, const char *name, size_t stack_size,
@@ -42,7 +42,7 @@ void make_thread(std::thread &t, const char *name, size_t stack_size,
 
 class WakeupThread {
 public:
-	static constexpr const char *TAG = "nutt.WakeupThread";
+	static constexpr const char *TAG = "mist.WakeupThread";
 
 	IRAM_ATTR void wake_up_isr();
 
@@ -63,4 +63,4 @@ private:
 	esp_timer_handle_t timer_{nullptr};
 };
 
-} // namespace nutt
+} // namespace mist

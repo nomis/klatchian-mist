@@ -1,5 +1,5 @@
 /*
- * candle-dribbler - ESP32 Zigbee light controller
+ * klatchian-mist - ESP32 Zigbee dehumidifier controller
  * Copyright 2023  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@
 
 extern "C" esp_log_level_t esp_log_default_level;
 
-namespace nutt {
+namespace mist {
 
 class Logging {
 public:
@@ -37,7 +37,7 @@ public:
 	void set_sys_level(esp_log_level_t level);
 
 private:
-	static constexpr const char *TAG = "nutt.Logging";
+	static constexpr const char *TAG = "mist.Logging";
 
 	static const char* to_string(esp_log_level_t level);
 
@@ -55,4 +55,4 @@ private:
 	esp_log_level_t default_level_{esp_log_default_level};
 };
 
-} // namespace nutt
+} // namespace mist
