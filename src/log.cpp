@@ -25,8 +25,8 @@
 #include <memory>
 
 #include "mist/main.h"
+#include "mist/dehumidifier.h"
 #include "mist/device.h"
-#include "mist/light.h"
 #include "mist/ota.h"
 #include "mist/thread.h"
 #include "mist/ui.h"
@@ -69,8 +69,8 @@ void Logging::set_app_level(esp_log_level_t level) {
 void Logging::configure_app(esp_log_level_t level) {
 	esp_log_level_set(mist::TAG, level);
 	esp_log_level_set(mist::CompressedOTA::TAG, level);
+	esp_log_level_set(mist::Dehumidifier::TAG, level);
 	esp_log_level_set(mist::Device::TAG, level);
-	esp_log_level_set(mist::Light::TAG, level);
 	esp_log_level_set(mist::UserInterface::TAG, level);
 	esp_log_level_set(mist::ZigbeeDevice::TAG, level);
 	esp_log_level_set(mist::ZigbeeCluster::TAG, level);

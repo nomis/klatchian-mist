@@ -28,8 +28,9 @@ The following Zigbee clusters are provided:
 * Power Switch
 * Mode (Analog Output)
 * Fan Speed (Analog Output)
-* Humidity (Analog Input)
+* Humidity Reading (Analog Input)
 * Humidity Setpoint (Analog Output)
+* Ioniser (Binary Output)
 * Auto Defrost (Binary Input)
 * Bucket Full (Binary Input)
 
@@ -162,9 +163,9 @@ you have more than one of the same type!
 
 Using `this version of homeassistant-entity-renamer
 <https://github.com/nomis/homeassistant-entity-renamer>`_ that can update
-the friendly names (so that they're not all "Light" and "Switch") and the
-`hass-rename-entities.sh script <hass-rename-entities.sh>`_ you can rename
-all of the entities automatically.
+the friendly names (so that they're not all "Analoginput", "Binaryinput" and
+"Switch") and the `hass-rename-entities.sh script <hass-rename-entities.sh>`_
+you can rename all of the entities automatically.
 
 The control cluster endpoints are in the following order:
 
@@ -175,81 +176,21 @@ The control cluster endpoints are in the following order:
    * - Type
      - Endpoint
      - Name
-   * - Light
-     - 11
-     - Light 1 (Primary)
-   * - Light
-     - 12
-     - Light 2 (Primary)
-   * - Light
-     - 13
-     - Light 3 (Primary)
-   * - ⋮
-     - ⋮
-     - ⋮
-   * - Light
-     - 1n
-     - Light N (Primary)
-   * - Light
+   * - Analogoutput
+     - 20
+     - Mode
+   * - Analogoutput
      - 21
-     - Light 1 (Secondary)
-   * - Light
-     - 22
-     - Light 2 (Secondary)
-   * - Light
-     - 23
-     - Light 3 (Secondary)
-   * - ⋮
-     - ⋮
-     - ⋮
-   * - Light
-     - 2n
-     - Light N (Secondary)
-   * - Light
+     - Fan Speed
+   * - Analogoutput
      - 31
-     - Light 1 (Tertiary)
-   * - Light
-     - 32
-     - Light 2 (Tertiary)
-   * - Light
-     - 33
-     - Light 3 (Tertiary)
-   * - ⋮
-     - ⋮
-     - ⋮
-   * - Light
-     - 3n
-     - Light N (Tertiary)
+     - Humidity setpoint
    * - Switch
-     - 71
-     - Enable 1 (Temporary)
+     - 10
+     - Power
    * - Switch
-     - 72
-     - Enable 2 (Temporary)
-   * - Switch
-     - 73
-     - Enable 3 (Temporary)
-   * - ⋮
-     - ⋮
-     - ⋮
-   * - Switch
-     - 7n
-     - Enable N (Temporary)
-   * - Switch
-     - 81
-     - Enable 1 (Persistent)
-   * - Switch
-     - 82
-     - Enable 2 (Persistent)
-   * - Switch
-     - 83
-     - Enable 3 (Persistent)
-   * - ⋮
-     - ⋮
-     - ⋮
-   * - Switch
-     - 8n
-     - Enable N (Persistent)
+     - 40
+     - Ioniser
 
 The sensor cluster endpoints are in the following order:
 
@@ -264,6 +205,9 @@ The sensor cluster endpoints are in the following order:
      - 1
      - Uptime (days)
    * - Analoginput
+     - 30
+     - Humidity Reading
+   * - Analoginput
      - 210
      - Connected time (days)
    * - Analoginput
@@ -274,18 +218,9 @@ The sensor cluster endpoints are in the following order:
      - Uplink RSSI (dB)
    * - Binaryinput
      - 11
-     - Switch 1
+     - Auto Defrost
    * - Binaryinput
      - 12
-     - Switch 2
-   * - Binaryinput
-     - 13
-     - Switch 3
-   * - ⋮
-     - ⋮
-     - ⋮
-   * - Binaryinput
-     - 1n
-     - Switch N
+     - Bucket Full
 
 .. |Build Status| image:: https://jenkins.uuid.uk/buildStatus/icon?job=klatchian-mist%2Fmain

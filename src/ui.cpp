@@ -1,6 +1,6 @@
 /*
  * klatchian-mist - ESP32 Zigbee dehumidifier controller
- * Copyright 2023-2024  Simon Arlott
+ * Copyright 2023-2024,2026  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,8 +59,8 @@ const std::unordered_map<Event,LEDSequence> UserInterface::led_sequences_{
 	                                                         { BLUE, 200 }, { MAGENTA, 200 }
 	                                                                                        } } },
 	{ Event::OTA_UPDATE_OK,                        {  500, { { CYAN, 0 }                    } } },
-	{ Event::LIGHT_SWITCHED_LOCAL,                 { 2000, { { ORANGE, 0 }                  } } },
-	{ Event::LIGHT_SWITCHED_REMOTE,                { 2000, { { BLUE, 0 }                    } } },
+	{ Event::STATUS_UPDATED,                       { 2000, { { ORANGE, 0 }                  } } },
+	{ Event::REMOTE_CONTROL,                       { 2000, { { BLUE, 0 }                    } } },
 	{ Event::IDENTIFY,                             { 3000, { { MAGENTA, 0 }                 } } },
 	{ Event::OTA_UPDATE_ERROR,                     { 3000, { { RED, 200 }, { OFF, 200 }     } } },
 	{ Event::NETWORK_UNCONFIGURED_DISCONNECTED,    {    0, { { WHITE, 0 }                   } } },
@@ -414,11 +414,17 @@ void UserInterface::ota_update(bool ok) {
 	wake_up();
 }
 
-void UserInterface::light_switched(bool local) {
+void UserInterface::status_updated() {
 	std::lock_guard lock{mutex_};
 
-	restart_event(local ? Event::LIGHT_SWITCHED_LOCAL
-		: Event::LIGHT_SWITCHED_REMOTE);
+	restart_event(Event::STATUS_UPDATED);
+	wake_up();
+}
+
+void UserInterface::remote_control() {
+	std::lock_guard lock{mutex_};
+
+	restart_event(Event::REMOTE_CONTROL);
 	wake_up();
 }
 

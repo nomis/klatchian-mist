@@ -39,8 +39,8 @@
 #include <vector>
 
 #include "mist/base64.h"
+#include "mist/dehumidifier.h"
 #include "mist/main.h"
-#include "mist/light.h"
 #include "mist/thread.h"
 #include "mist/ui.h"
 #include "mist/util.h"
@@ -50,11 +50,12 @@ using namespace std::chrono_literals;
 
 namespace mist {
 
-Device::Device(UserInterface &ui) : WakeupThread("Device", true), ui_(ui),
+Device::Device(UserInterface &ui, gpio_num_t rx_pin, gpio_num_t tx_pin)
+		: WakeupThread("Device", true), ui_(ui),
 		zigbee_(*new ZigbeeDevice{*this}),
 		basic_cl_(*this, "uuid.uk", "klatchian-mist",
 			"https://github.com/nomis/klatchian-mist"),
-		identify_cl_(ui_) {
+		identify_cl_(ui_), dehumidifier_(*new Dehumidifier{rx_pin, tx_pin}) {
 	uptime_task_ = std::make_shared<std::function<void()>>([this] {
 		uint32_t next_ms = uptime_cl_.update(core_dump_present_);
 		zigbee_.reschedule_after(uptime_task_, next_ms);
@@ -78,7 +79,7 @@ Device::Device(UserInterface &ui) : WakeupThread("Device", true), ui_(ui),
 	}
 
 	auto &main_ep = *new ZigbeeEndpoint{MAIN_EP_ID, ESP_ZB_AF_HA_PROFILE_ID,
-		ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID, {basic_cl_, identify_cl_, uptime_cl_}};
+		ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID, {basic_cl_, identify_cl_, uptime_cl_}};
 
 	if (OTA_SUPPORTED) {
 		ESP_LOGD(TAG, "OTA supported");
@@ -103,30 +104,31 @@ Device::Device(UserInterface &ui) : WakeupThread("Device", true), ui_(ui),
 		software_cls_.emplace_back(software_cl);
 		zigbee_.add(*new ZigbeeEndpoint{
 			static_cast<ep_id_t>(SOFTWARE_BASE_EP_ID + i),
-			ESP_ZB_AF_HA_PROFILE_ID, ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID,
+			ESP_ZB_AF_HA_PROFILE_ID, ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID,
 			software_cl});
 	}
 
 	zigbee_.add(*new ZigbeeEndpoint{CONNECTED_EP_ID, ESP_ZB_AF_HA_PROFILE_ID,
-			ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID, {connected_cl_}});
+			ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID, {connected_cl_}});
 
 	zigbee_.add(*new ZigbeeEndpoint{UPLINK_PARENT_EP_ID, ESP_ZB_AF_HA_PROFILE_ID,
-			ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID, {uplink_cl_}});
+			ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID, {uplink_cl_}});
 
 	zigbee_.add(*new ZigbeeEndpoint{UPLINK_RSSI_EP_ID, ESP_ZB_AF_HA_PROFILE_ID,
-			ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID, {rssi_cl_}});
+			ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID, {rssi_cl_}});
 
 	reload_core_dump_status();
 	ui_.core_dump(core_dump_present_);
+	dehumidifier_.attach(*this);
 }
 
-void Device::add(Light &light, std::vector<std::reference_wrapper<ZigbeeEndpoint>> &&endpoints) {
-	lights_.emplace(light.index(), light);
-	light_tasks_.emplace(light.index(),
-			std::make_shared<std::function<void()>>([&light] {
-		ESP_LOGD(TAG, "Refresh light %u", light.index());
-		light.refresh();
-	}));
+void Device::attach(std::vector<std::reference_wrapper<ZigbeeEndpoint>> &&endpoints) {
+	// dehumidifiers_.emplace(dehumidifier.index(), dehumidifier);
+	// dehumidifier_tasks_.emplace(dehumidifier.index(),
+	// 		std::make_shared<std::function<void()>>([&dehumidifier] {
+	// 	ESP_LOGD(TAG, "Refresh dehumidifier %u", dehumidifier.index());
+	// 	dehumidifier.refresh();
+	// }));
 
 	for (auto ep : endpoints)
 		zigbee_.add(ep);
@@ -142,9 +144,9 @@ void Device::start() {
 	t.detach();
 }
 
-void Device::request_refresh(const Light &light) {
-	zigbee_.reschedule(light_tasks_.at(light.index()));
-}
+// void Device::request_refresh(const Light &light) {
+// 	zigbee_.reschedule(dehumidifier_tasks_.at(dehumidifier.index()));
+// }
 
 void Device::join_network() {
 	zigbee_.join_network();
@@ -324,8 +326,7 @@ unsigned long Device::run_tasks() {
 
 	esp_task_wdt_reset();
 
-	for (auto &light : lights_)
-		wait_ms = std::min(wait_ms, light.second.run());
+	wait_ms = std::min(wait_ms, dehumidifier_.run());
 
 	return wait_ms;
 }

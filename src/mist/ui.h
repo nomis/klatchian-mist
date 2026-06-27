@@ -1,6 +1,6 @@
 /*
  * klatchian-mist - ESP32 Zigbee dehumidifier controller
- * Copyright 2023  Simon Arlott
+ * Copyright 2023,2026  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,8 +82,8 @@ enum class Event {
 	NETWORK_UNCONFIGURED_DISCONNECTED,
 	OTA_UPDATE_ERROR,
 	IDENTIFY,
-	LIGHT_SWITCHED_REMOTE,
-	LIGHT_SWITCHED_LOCAL,
+	REMOTE_CONTROL,
+	STATUS_UPDATED,
 	OTA_UPDATE_OK,
 	CORE_DUMP_PRESENT,
 	NETWORK_CONNECT,
@@ -114,7 +114,8 @@ public:
 	void network_state(bool configured, ui::NetworkState state);
 	void network_error();
 	void identify(uint16_t seconds);
-	void light_switched(bool local);
+	void status_updated();
+	void remote_control();
 	void ota_update(bool ok);
 	void core_dump(bool present);
 

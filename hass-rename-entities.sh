@@ -1,5 +1,5 @@
 #!/bin/bash
-if [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ]; then
+if [ -z "$2" ] || [ -z "$3" ]; then
 	echo "Usage: $0 <old suffix|-> <new id> <new name>"
 	echo
 	echo "Example: $0 uuid_uk_klatchian_mist klatchian_mist_1 \"Klatchian Mist 1\""
@@ -10,77 +10,49 @@ NEW="$2"
 NAME="$3"
 [ "$OLD" = "-" ] && OLD=""
 shift 3
-LIGHTS=("$@")
 
 function generate_file() {
 	echo "{"
 
-	light=1
-	switch=1
-	binary_sensor=1
+	old="switch.${OLD}_switch"
+	new="switch.${NEW}_power"
+	[ -n "$OLD" ] || old="$new"
+	echo "  \"${old}\": [\"${new}\", \"${NAME} Power\"],"
 
-	i=0
-	while [ $i -lt ${#LIGHTS[@]} ]; do
-		n=$(($i + 1))
+	old="switch.${OLD}_switch_2"
+	new="switch.${NEW}_ioniser"
+	[ -n "$OLD" ] || old="$new"
+	echo "  \"${old}\": [\"${new}\", \"${NAME} Ioniser\"],"
 
-		id="_${light}"
-		[ $light -eq 1 ] && id=""
-		old="light.${OLD}_light${id}"
-		new="light.${NEW}_light_${n}p"
-		[ -n "$OLD" ] || old="$new"
-		echo "  \"${old}\": [\"${new}\", \"${NAME} Light ${LIGHTS[$i]} (Primary)\"],"
-		light=$(($light + 1))
+	old="number.${OLD}_number_mode"
+	new="number.${NEW}_mode"
+	[ -n "$OLD" ] || old="$new"
+	echo "  \"${old}\": [\"${new}\", \"${NAME} Mode\"],"
 
-		id="_${switch}"
-		[ $switch -eq 1 ] && id=""
-		old="switch.${OLD}_switch${id}"
-		new="switch.${NEW}_enable_${n}t"
-		[ -n "$OLD" ] || old="$new"
-		echo "  \"${old}\": [\"${new}\", \"${NAME} Enable ${LIGHTS[$i]} (Temporary)\"],"
-		switch=$(($switch + 1))
+	old="number.${OLD}_number_fan_speed"
+	new="number.${NEW}_fan_speed"
+	[ -n "$OLD" ] || old="$new"
+	echo "  \"${old}\": [\"${new}\", \"${NAME} Fan Speed\"],"
 
-		id="_${binary_sensor}"
-		[ $binary_sensor -eq 1 ] && id=""
-		old="binary_sensor.${OLD}_binaryinput${id}"
-		new="binary_sensor.${NEW}_switch_${n}"
-		[ -n "$OLD" ] || old="$new"
-		echo "  \"${old}\": [\"${new}\", \"${NAME} Switch ${LIGHTS[$i]}\"],"
-		binary_sensor=$(($binary_sensor + 1))
+	old="number.${OLD}_number_humidity_setpoint"
+	new="number.${NEW}_humidity"
+	[ -n "$OLD" ] || old="$new"
+	echo "  \"${old}\": [\"${new}\", \"${NAME} Humidity Setpoint\"],"
 
-		i=$n
-	done
+	old="switch.${OLD}_switch_2"
+	new="switch.${NEW}_ioniser"
+	[ -n "$OLD" ] || old="$new"
+	echo "  \"${old}\": [\"${new}\", \"${NAME} Ioniser\"],"
 
-	i=0
-	while [ $i -lt ${#LIGHTS[@]} ]; do
-		n=$(($i + 1))
+	old="binary_sensor.${OLD}_binaryinput"
+	new="binary_sensor.${NEW}_auto_defrost"
+	[ -n "$OLD" ] || old="$new"
+	echo "  \"${old}\": [\"${new}\", \"${NAME} Auto Defrost\"],"
 
-		old="light.${OLD}_light_${light}"
-		new="light.${NEW}_light_${n}s"
-		[ -n "$OLD" ] || old="$new"
-		echo "  \"${old}\": [\"${new}\", \"${NAME} Light ${LIGHTS[$i]} (Secondary)\"],"
-		light=$(($light + 1))
-
-		old="switch.${OLD}_switch_${switch}"
-		new="switch.${NEW}_enable_${n}p"
-		[ -n "$OLD" ] || old="$new"
-		echo "  \"${old}\": [\"${new}\", \"${NAME} Enable ${LIGHTS[$i]} (Persistent)\"],"
-		switch=$(($switch + 1))
-
-		i=$n
-	done
-
-	i=0
-	while [ $i -lt ${#LIGHTS[@]} ]; do
-		n=$(($i + 1))
-
-		old="light.${OLD}_light_${light}"
-		new="light.${NEW}_light_${n}t"
-		[ -n "$OLD" ] || old="$new"
-		echo "  \"${old}\": [\"${new}\", \"${NAME} Light ${LIGHTS[$i]} (Tertiary)\"],"
-		light=$(($light + 1))
-
-		i=$n
-	done
+	old="binary_sensor.${OLD}_binaryinput_2"
+	new="binary_sensor.${NEW}_bucket_full"
+	[ -n "$OLD" ] || old="$new"
+	echo "  \"${old}\": [\"${new}\", \"${NAME} Bucket Full\"],"
 
 	old="button.${OLD}_identify"
 	new="button.${NEW}_identify"
@@ -93,16 +65,21 @@ function generate_file() {
 	echo "  \"${old}\": [\"${new}\", \"${NAME} Uptime (days)\"],"
 
 	old="sensor.${OLD}_analoginput_2"
+	new="sensor.${NEW}_humidity"
+	[ -n "$OLD" ] || old="$new"
+	echo "  \"${old}\": [\"${new}\", \"${NAME} Humidity Reading\"],"
+
+	old="sensor.${OLD}_analoginput_3"
 	new="sensor.${NEW}_connected_time"
 	[ -n "$OLD" ] || old="$new"
 	echo "  \"${old}\": [\"${new}\", \"${NAME} Connected time (days)\"],"
 
-	old="sensor.${OLD}_analoginput_3"
+	old="sensor.${OLD}_analoginput_4"
 	new="sensor.${NEW}_uplink_address"
 	[ -n "$OLD" ] || old="$new"
 	echo "  \"${old}\": [\"${new}\", \"${NAME} Uplink address\"],"
 
-	old="sensor.${OLD}_analoginput_4"
+	old="sensor.${OLD}_analoginput_5"
 	new="sensor.${NEW}_uplink_rssi"
 	[ -n "$OLD" ] || old="$new"
 	echo "  \"${old}\": [\"${new}\", \"${NAME} Uplink RSSI\"],"

@@ -1,6 +1,6 @@
 /*
  * klatchian-mist - ESP32 Zigbee dehumidifier controller
- * Copyright 2023  Simon Arlott
+ * Copyright 2023,2026  Simon Arlott
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,14 +24,14 @@
 #include <nvs_flash.h>
 #include <driver/gpio.h>
 
+#include "mist/dehumidifier.h"
 #include "mist/device.h"
 #include "mist/log.h"
-#include "mist/light.h"
 #include "mist/ui.h"
 
 using namespace mist;
 
-static_assert(mist::Device::NUM_EP_PER_DEVICE + MAX_LIGHTS * mist::Light::NUM_EP_PER_LIGHT <= ZB_MAX_EP_NUMBER,
+static_assert(mist::Device::NUM_EP + mist::Dehumidifier::NUM_EP <= ZB_MAX_EP_NUMBER,
 	"You'll need to ask Espressif to let you use more endpoints");
 
 extern "C" void app_main() {
@@ -50,19 +50,7 @@ extern "C" void app_main() {
 	ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_LEVEL2));
 
 	auto &ui = *new UserInterface{logging, GPIO_NUM_4, true};
-	auto &device = *new Device{ui};
-
-	/*                                 Switch       Active Low          Relay        Active Low
-	 *                                 -----------  -----------------   -----------  ----------------
-	 */
-	if (MAX_LIGHTS >= 1) (new Light{1, GPIO_NUM_3,  SWITCH_ACTIVE_LOW,  GPIO_NUM_18, RELAY_ACTIVE_LOW })->attach(device);
-	if (MAX_LIGHTS >= 2) (new Light{2, GPIO_NUM_2,  SWITCH_ACTIVE_LOW,  GPIO_NUM_19, RELAY_ACTIVE_LOW })->attach(device);
-	if (MAX_LIGHTS >= 3) (new Light{3, GPIO_NUM_11, SWITCH_ACTIVE_LOW,  GPIO_NUM_20, RELAY_ACTIVE_LOW })->attach(device);
-	if (MAX_LIGHTS >= 4) (new Light{4, GPIO_NUM_10, SWITCH_ACTIVE_LOW,  GPIO_NUM_21, RELAY_ACTIVE_LOW })->attach(device);
-	if (MAX_LIGHTS >= 5) (new Light{5, GPIO_NUM_1,  SWITCH_ACTIVE_LOW,  GPIO_NUM_22, RELAY_ACTIVE_LOW })->attach(device);
-	if (MAX_LIGHTS >= 6) (new Light{6, GPIO_NUM_0,  SWITCH_ACTIVE_LOW,  GPIO_NUM_23, RELAY_ACTIVE_LOW })->attach(device);
-	if (MAX_LIGHTS >= 7) (new Light{7, GPIO_NUM_7,  SWITCH_ACTIVE_LOW,  GPIO_NUM_15, RELAY_ACTIVE_LOW })->attach(device);
-	if (MAX_LIGHTS >= 8) (new Light{8, GPIO_NUM_6,  SWITCH_ACTIVE_LOW,  GPIO_NUM_5,  RELAY_ACTIVE_LOW })->attach(device);
+	auto &device = *new Device{ui, GPIO_NUM_2, GPIO_NUM_3};
 
 	ESP_ERROR_CHECK(esp_task_wdt_reset());
 	device.start();
