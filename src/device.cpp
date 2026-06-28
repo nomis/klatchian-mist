@@ -39,6 +39,7 @@
 #include <vector>
 
 #include "mist/base64.h"
+#include "mist/comms.h"
 #include "mist/dehumidifier.h"
 #include "mist/main.h"
 #include "mist/thread.h"
@@ -475,9 +476,11 @@ void Device::zigbee_network_state(bool configured, ZigbeeState state,
 			reload_app_info(false);
 		}
 
+		comms_.connected(true);
 		connected_cl_.connected();
 		zigbee_.reschedule_after(connected_task_, 1000);
 	} else {
+		comms_.connected(false);
 		connected_cl_.disconnected();
 		zigbee_.reschedule_after(connected_task_, 1000);
 	}

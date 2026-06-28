@@ -49,6 +49,8 @@ public:
 	void attach(Device &device);
 	void start();
 
+	void connected(bool state);
+
 	void set_power(bool state);
 	void set_mode(dehumidifier::Mode mode);
 	void set_fan_speed(dehumidifier::Fan speed);
@@ -84,6 +86,9 @@ private:
 	uint64_t tx_request_state_us_{0};
 
 	std::mutex mutex_;
+	bool connected_{false};
+	bool network_state_{false};
+	bool network_state_changed_{false};
 	bool request_state_busy_{false};
 	SetState set_state_busy_{SetState::NONE};
 	struct {

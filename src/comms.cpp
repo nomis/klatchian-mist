@@ -85,6 +85,16 @@ void SerialIO::start() {
 	t.detach();
 }
 
+void SerialIO::connected(bool state) {
+	std::unique_lock lock{mutex_};
+
+	if (connected_ != state) {
+		connected_ = state;
+		network_state_changed_ = true;
+		wake_up();
+	}
+}
+
 void SerialIO::set_power(bool state) {
 	std::unique_lock lock{mutex_};
 
@@ -173,8 +183,10 @@ unsigned long SerialIO::run_tasks() {
 	{
 		std::unique_lock lock{mutex_};
 
-		if (tx_network_status_) {
+		if (tx_network_status_ || network_state_changed_) {
 			tx_network_status_ = false;
+			network_state_ = connected_;
+			network_state_changed_ = false;
 			if (lock) {
 				lock.unlock();
 			}
@@ -300,6 +312,12 @@ void SerialIO::parse_message() {
 		/* This message will be sent 3 times and the CRC8 is invalid (0x00) */
 		debug_message("<-", &rx_buf_[0], rx_buf_[1] + 1, "WiFi reset");
 		if (state_.valid) {
+			std::unique_lock lock{mutex_};
+
+			tx_network_status_ = true;
+			wake_up();
+
+			lock.unlock();
 			device_->join_network();
 		}
 	}
@@ -338,9 +356,11 @@ void SerialIO::rx_parse_state() {
 		state_.temperature_c, state_.bucket_full);
 
 	if (start) {
+		network_state_changed_ = true;
 		lock.unlock();
 		update_state();
 		device_->start();
+		wake_up();
 	} else {
 		if (set_state_busy_ == SetState::NONE) {
 			lock.unlock();
@@ -501,7 +521,7 @@ void SerialIO::tx_network_status() {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	};
 
-	tx_message(0x03, 0x0D, false ? connected_data : disconnected_data, "Network status");
+	tx_message(0x03, 0x0D, network_state_ ? connected_data : disconnected_data, "Network status");
 }
 
 void SerialIO::prepare_set_state() {
