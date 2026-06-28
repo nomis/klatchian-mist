@@ -52,6 +52,7 @@ Dehumidifier::Dehumidifier(gpio_num_t rx_pin, gpio_num_t tx_pin) :
 		fan_speed_cl_(*new dehumidifier::FanSpeedCluster{*this}),
 		humidity_reading_cl_(*new dehumidifier::HumidityReadingCluster{*this}),
 		humidity_setpoint_cl_(*new dehumidifier::HumiditySetpointCluster{*this}),
+		temperature_cl_(*new dehumidifier::TemperatureCluster{*this}),
 		ioniser_cl_(*new dehumidifier::IoniserCluster{*this}) {
 }
 
@@ -90,6 +91,10 @@ void Dehumidifier::attach(Device &device) {
 			static_cast<ep_id_t>(HUMIDITY_SETPOINT_EP_ID),
 			ESP_ZB_AF_HA_PROFILE_ID, ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID,
 			{humidity_setpoint_cl_}},
+		*new ZigbeeEndpoint{
+			static_cast<ep_id_t>(TEMPERATURE_EP_ID),
+			ESP_ZB_AF_HA_PROFILE_ID, ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID,
+			{temperature_cl_}},
 		*new ZigbeeEndpoint{
 			static_cast<ep_id_t>(IONISER_EP_ID),
 			ESP_ZB_AF_HA_PROFILE_ID, ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID,
@@ -134,6 +139,11 @@ int Dehumidifier::humidity_reading() const {
 int Dehumidifier::humidity_setpoint() const {
 	std::lock_guard lock{mutex_};
 	return humidity_setpoint_;
+}
+
+float Dehumidifier::temperature() const {
+	std::lock_guard lock{mutex_};
+	return temperature_;
 }
 
 bool Dehumidifier::ioniser() const {
@@ -189,6 +199,7 @@ void Dehumidifier::refresh() {
 	fan_speed_cl_.refresh();
 	humidity_reading_cl_.refresh();
 	humidity_setpoint_cl_.refresh();
+	temperature_cl_.refresh();
 	ioniser_cl_.refresh();
 }
 
@@ -543,7 +554,7 @@ HumiditySetpointCluster::HumiditySetpointCluster(Dehumidifier &dehumidifier)
 			ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_PRESENT_VALUE_ID,
 			  (  0x01 << 24)  /* Group: Analog Output                   */
 			| (  0x01 << 16)  /* Type:  Relative Humidity in %          */
-			|  0x0008         /* Index: Zone Relative Humidity Setpoint */,
+			|  0x0001         /* Index: Zone Relative Humidity Setpoint */,
 			       29         /* Percent Relative Humidity              */,
 			MIN_HUMIDITY_SETPOINT, MAX_HUMIDITY_SETPOINT, 5) {
 }
@@ -558,6 +569,29 @@ float HumiditySetpointCluster::refresh_value() {
 
 void HumiditySetpointCluster::updated_value(float value) {
 	dehumidifier_.humidity_setpoint(value);
+}
+
+TemperatureCluster::TemperatureCluster(Dehumidifier &dehumidifier)
+		: AnalogCluster(dehumidifier, "Temperature",
+			ESP_ZB_ZCL_CLUSTER_ID_ANALOG_INPUT,
+			ESP_ZB_ZCL_ATTR_ANALOG_INPUT_PRESENT_VALUE_ID,
+			  (  0x00 << 24)  /* Group: Analog Input             */
+			| (  0x00 << 16)  /* Type:  Temperature in Degrees C */
+			|  0x003C         /* Index: Zone Temperature         */,
+			       62         /* Temperature in Degrees C        */,
+			-26, 103, 0.1) {
+}
+
+void TemperatureCluster::configure_cluster_list(esp_zb_cluster_list_t &cluster_list) {
+	configure_analog_input_cluster_list(cluster_list);
+}
+
+float TemperatureCluster::refresh_value() {
+	return dehumidifier_.temperature();
+}
+
+void TemperatureCluster::updated_value(float value) {
+	/* Ignored */
 }
 
 IoniserCluster::IoniserCluster(Dehumidifier &dehumidifier)

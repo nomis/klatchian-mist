@@ -185,6 +185,9 @@ The control cluster endpoints are in the following order:
    * - Analogoutput
      - 31
      - Humidity setpoint
+   * - Analogoutput
+     - 32
+     - Temperature
    * - Switch
      - 10
      - Power

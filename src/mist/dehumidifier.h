@@ -223,6 +223,18 @@ protected:
 	void updated_value(float value) override;
 };
 
+class TemperatureCluster: public AnalogCluster {
+public:
+	explicit TemperatureCluster(Dehumidifier &dehumidifier);
+	~TemperatureCluster() = delete;
+
+	void configure_cluster_list(esp_zb_cluster_list_t &cluster_list) override;
+
+protected:
+	float refresh_value() override;
+	void updated_value(float value) override;
+};
+
 class IoniserCluster: public BooleanCluster {
 public:
 	explicit IoniserCluster(Dehumidifier &dehumidifier);
@@ -256,6 +268,7 @@ public:
 	dehumidifier::Fan fan_speed() const;
 	int humidity_reading() const;
 	int humidity_setpoint() const;
+	float temperature() const;
 	bool ioniser() const;
 
 	void power(bool state);
@@ -272,6 +285,7 @@ private:
 	static constexpr const ep_id_t FAN_SPEED_EP_ID = 21;
 	static constexpr const ep_id_t HUMIDITY_READING_EP_ID = 30;
 	static constexpr const ep_id_t HUMIDITY_SETPOINT_EP_ID = 31;
+	static constexpr const ep_id_t TEMPERATURE_EP_ID = 32;
 	static constexpr const ep_id_t IONISER_EP_ID = 40;
 
 	mutable std::mutex mutex_;
@@ -282,6 +296,7 @@ private:
 	dehumidifier::Fan fan_speed_{0};
 	int humidity_reading_{0};
 	int humidity_setpoint_{0};
+	float temperature_{0.0};
 	bool ioniser_{false};
 
 	dehumidifier::PowerSwitchCluster &power_switch_cl_;
@@ -291,6 +306,7 @@ private:
 	dehumidifier::FanSpeedCluster &fan_speed_cl_;
 	dehumidifier::HumidityReadingCluster &humidity_reading_cl_;
 	dehumidifier::HumiditySetpointCluster &humidity_setpoint_cl_;
+	dehumidifier::TemperatureCluster &temperature_cl_;
 	dehumidifier::IoniserCluster &ioniser_cl_;
 
 	Device *device_{nullptr};

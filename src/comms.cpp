@@ -346,7 +346,7 @@ void SerialIO::debug_message(const char *direction, const uint8_t *data,
 		text[3 * i + 2] = l < 10 ? ('0' + l) : ('A' + l - 10);
 	}
 
-	ESP_LOGD(TAG, "(%s) %s%s", desc, direction, text.data());
+	ESP_LOGD(TAG, "%s (%s)%s", direction, desc, text.data());
 }
 
 } // namespace mist

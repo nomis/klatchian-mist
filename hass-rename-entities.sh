@@ -70,16 +70,21 @@ function generate_file() {
 	echo "  \"${old}\": [\"${new}\", \"${NAME} Humidity Reading\"],"
 
 	old="sensor.${OLD}_analoginput_3"
+	new="sensor.${NEW}_temperature"
+	[ -n "$OLD" ] || old="$new"
+	echo "  \"${old}\": [\"${new}\", \"${NAME} Temperature\"],"
+
+	old="sensor.${OLD}_analoginput_4"
 	new="sensor.${NEW}_connected_time"
 	[ -n "$OLD" ] || old="$new"
 	echo "  \"${old}\": [\"${new}\", \"${NAME} Connected time (days)\"],"
 
-	old="sensor.${OLD}_analoginput_4"
+	old="sensor.${OLD}_analoginput_5"
 	new="sensor.${NEW}_uplink_address"
 	[ -n "$OLD" ] || old="$new"
 	echo "  \"${old}\": [\"${new}\", \"${NAME} Uplink address\"],"
 
-	old="sensor.${OLD}_analoginput_5"
+	old="sensor.${OLD}_analoginput_6"
 	new="sensor.${NEW}_uplink_rssi"
 	[ -n "$OLD" ] || old="$new"
 	echo "  \"${old}\": [\"${new}\", \"${NAME} Uplink RSSI\"],"
