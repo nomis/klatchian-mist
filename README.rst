@@ -223,4 +223,12 @@ The sensor cluster endpoints are in the following order:
      - 12
      - Bucket Full
 
+References
+----------
+
+Additional detail on the serial protocol can be found in these projects:
+
+* `Hypfer/esp8266-midea-dehumidifier <https://github.com/Hypfer/esp8266-midea-dehumidifier>`_
+* `Chreece/ESPHome-Dehumidifier <https://github.com/Chreece/ESPHome-Dehumidifier>`_
+
 .. |Build Status| image:: https://jenkins.uuid.uk/buildStatus/icon?job=klatchian-mist%2Fmain
