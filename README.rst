@@ -30,6 +30,7 @@ The following Zigbee clusters are provided:
 * Fan Speed (Analog Output)
 * Humidity Reading (Analog Input)
 * Humidity Setpoint (Analog Output)
+* Temperature (Analog Input)
 * Ioniser (Binary Output)
 * Auto Defrost (Binary Input)
 * Bucket Full (Binary Input)
