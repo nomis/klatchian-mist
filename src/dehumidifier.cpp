@@ -32,10 +32,12 @@
 #include <string>
 #include <thread>
 
+#include "mist/comms.h"
 #include "mist/debounce.h"
 #include "mist/device.h"
 #include "mist/ui.h"
 #include "mist/util.h"
+#include "zcl/esp_zigbee_zcl_common.h"
 #include "zcl/esp_zigbee_zcl_fan_control.h"
 
 #ifndef ESP_ZB_HA_ON_OFF_LIGHT_SWITCH_DEVICE_ID
@@ -151,43 +153,147 @@ bool Dehumidifier::ioniser() const {
 	return ioniser_;
 }
 
-void Dehumidifier::power(bool state) {
+void Dehumidifier::update_power(bool state) {
+	std::lock_guard lock{mutex_};
+
+	if (power_ != state) {
+		ESP_LOGD(TAG, "Power %d -> %d", power_, state);
+		power_ = state;
+		device_->request_refresh();
+		device_->ui().status_updated();
+	}
+}
+
+void Dehumidifier::update_auto_defrost(bool state) {
+	std::lock_guard lock{mutex_};
+
+	if (auto_defrost_ != state) {
+		ESP_LOGD(TAG, "Auto defrost %d -> %d", auto_defrost_, state);
+		auto_defrost_ = state;
+		device_->request_refresh();
+		device_->ui().status_updated();
+	}
+}
+
+void Dehumidifier::update_bucket_full(bool state) {
+	std::lock_guard lock{mutex_};
+
+	if (bucket_full_ != state) {
+		ESP_LOGD(TAG, "Bucket full %d -> %d", bucket_full_, state);
+		bucket_full_ = state;
+		device_->request_refresh();
+		device_->ui().status_updated();
+	}
+}
+
+void Dehumidifier::update_mode(dehumidifier::Mode mode) {
+	std::lock_guard lock{mutex_};
+
+	if (mode_ != mode) {
+		ESP_LOGD(TAG, "Mode %d -> %d", mode_, mode);
+		mode_ = mode;
+		device_->request_refresh();
+		device_->ui().status_updated();
+	}
+}
+
+void Dehumidifier::update_fan_speed(dehumidifier::Fan speed) {
+	std::lock_guard lock{mutex_};
+
+	if (fan_speed_ != speed) {
+		ESP_LOGD(TAG, "Fan speed %d -> %d", fan_speed_, speed);
+		fan_speed_ = speed;
+		device_->request_refresh();
+		device_->ui().status_updated();
+	}
+}
+
+void Dehumidifier::update_humidity_reading(int humidity) {
+	std::lock_guard lock{mutex_};
+
+	if (humidity_reading_ != humidity) {
+		ESP_LOGD(TAG, "Humidity reading %d -> %d", humidity_reading_, humidity);
+		humidity_reading_ = humidity;
+		device_->request_refresh();
+		device_->ui().status_updated();
+	}
+}
+
+void Dehumidifier::update_humidity_setpoint(int humidity) {
+	std::lock_guard lock{mutex_};
+
+	if (humidity_setpoint_ != humidity) {
+		ESP_LOGD(TAG, "Humidity setpoint %d -> %d", humidity_setpoint_, humidity);
+		humidity_setpoint_ = humidity;
+		device_->request_refresh();
+		device_->ui().status_updated();
+	}
+}
+
+void Dehumidifier::update_temperature(float temperature) {
+	std::lock_guard lock{mutex_};
+
+	if (temperature_ != temperature) {
+		ESP_LOGD(TAG, "Temperature %.1f -> %.1f", temperature_, temperature);
+		temperature_ = temperature;
+		device_->request_refresh();
+		device_->ui().status_updated();
+	}
+}
+
+void Dehumidifier::update_ioniser(bool state) {
+	std::lock_guard lock{mutex_};
+
+	if (ioniser_ != state) {
+		ESP_LOGD(TAG, "Ioniser %d -> %d", ioniser_, state);
+		ioniser_ = state;
+		device_->request_refresh();
+		device_->ui().status_updated();
+	}
+}
+
+void Dehumidifier::set_power(bool state) {
 	std::lock_guard lock{mutex_};
 
 	ESP_LOGD(TAG, "Set power %d -> %d", power_, state);
 	power_ = state;
+	device_->comms().set_power(state);
 	device_->ui().remote_control();
 }
 
-void Dehumidifier::mode(dehumidifier::Mode mode) {
+void Dehumidifier::set_mode(dehumidifier::Mode mode) {
 	std::lock_guard lock{mutex_};
 
 	ESP_LOGD(TAG, "Set mode %d -> %d", mode_, mode);
 	mode_ = mode;
+	device_->comms().set_mode(mode);
 	device_->ui().remote_control();
 }
 
-void Dehumidifier::fan_speed(dehumidifier::Fan speed) {
+void Dehumidifier::set_fan_speed(dehumidifier::Fan speed) {
 	std::lock_guard lock{mutex_};
 
 	ESP_LOGD(TAG, "Set fan speed %d -> %d", fan_speed_, speed);
 	fan_speed_ = speed;
+	device_->comms().set_fan_speed(speed);
 	device_->ui().remote_control();
 }
 
-void Dehumidifier::humidity_setpoint(int humidity) {
+void Dehumidifier::set_humidity_setpoint(int humidity) {
 	std::lock_guard lock{mutex_};
 
 	ESP_LOGD(TAG, "Set humidity setpoint %d -> %d", humidity_setpoint_, humidity);
 	humidity_setpoint_ = humidity;
+	device_->comms().set_humidity_setpoint(humidity);
 	device_->ui().remote_control();
 }
 
-void Dehumidifier::ioniser(bool state) {
+void Dehumidifier::set_ioniser(bool state) {
 	std::lock_guard lock{mutex_};
 
 	ESP_LOGD(TAG, "Set ioniser %d -> %d", ioniser_, state);
 	ioniser_ = state;
+	device_->comms().set_ioniser(state);
 	device_->ui().remote_control();
 }
 
@@ -399,12 +505,13 @@ bool PowerSwitchCluster::refresh_value() {
 }
 
 void PowerSwitchCluster::updated_value(bool state) {
-	dehumidifier_.power(state);
+	dehumidifier_.set_power(state);
 }
 
 AutoDefrostCluster::AutoDefrostCluster(Dehumidifier &dehumidifier)
 		: BooleanCluster(dehumidifier, "auto defrost",
-			ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID) {
+			ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT,
+			ESP_ZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID) {
 }
 
 void AutoDefrostCluster::configure_cluster_list(esp_zb_cluster_list_t &cluster_list) {
@@ -424,7 +531,8 @@ void AutoDefrostCluster::updated_value(bool state) {
 
 BucketFullCluster::BucketFullCluster(Dehumidifier &dehumidifier)
 		: BooleanCluster(dehumidifier, "Bucket Full",
-			ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID) {
+			ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT,
+			ESP_ZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID) {
 }
 
 void BucketFullCluster::configure_cluster_list(esp_zb_cluster_list_t &cluster_list) {
@@ -464,23 +572,23 @@ float ModeCluster::refresh_value() {
 void ModeCluster::updated_value(float value) {
 		switch ((int)std::rint(value)) {
 	case static_cast<std::underlying_type_t<Mode>>(Mode::SetPoint):
-		dehumidifier_.mode(Mode::SetPoint);
+		dehumidifier_.set_mode(Mode::SetPoint);
 		break;
 
 	case static_cast<std::underlying_type_t<Mode>>(Mode::Continuous):
-		dehumidifier_.mode(Mode::Continuous);
+		dehumidifier_.set_mode(Mode::Continuous);
 		break;
 
 	case static_cast<std::underlying_type_t<Mode>>(Mode::Smart):
-		dehumidifier_.mode(Mode::Smart);
+		dehumidifier_.set_mode(Mode::Smart);
 		break;
 
 	case static_cast<std::underlying_type_t<Mode>>(Mode::ClothesDrying):
-		dehumidifier_.mode(Mode::ClothesDrying);
+		dehumidifier_.set_mode(Mode::ClothesDrying);
 		break;
 
 	default:
-		dehumidifier_.mode(Mode::Unknown);
+		dehumidifier_.set_mode(Mode::Unknown);
 		break;
 	}
 }
@@ -508,19 +616,19 @@ float FanSpeedCluster::refresh_value() {
 void FanSpeedCluster::updated_value(float value) {
 		switch ((int)std::rint(value)) {
 	case static_cast<std::underlying_type_t<Fan>>(Fan::Low):
-		dehumidifier_.fan_speed(Fan::Low);
+		dehumidifier_.set_fan_speed(Fan::Low);
 		break;
 
 	case static_cast<std::underlying_type_t<Fan>>(Fan::Medium):
-		dehumidifier_.fan_speed(Fan::Medium);
+		dehumidifier_.set_fan_speed(Fan::Medium);
 		break;
 
 	case static_cast<std::underlying_type_t<Fan>>(Fan::High):
-		dehumidifier_.fan_speed(Fan::High);
+		dehumidifier_.set_fan_speed(Fan::High);
 		break;
 
 	default:
-		dehumidifier_.fan_speed(Fan::Unknown);
+		dehumidifier_.set_fan_speed(Fan::Unknown);
 		break;
 	}
 }
@@ -568,7 +676,7 @@ float HumiditySetpointCluster::refresh_value() {
 }
 
 void HumiditySetpointCluster::updated_value(float value) {
-	dehumidifier_.humidity_setpoint(value);
+	dehumidifier_.set_humidity_setpoint(value);
 }
 
 TemperatureCluster::TemperatureCluster(Dehumidifier &dehumidifier)
@@ -608,7 +716,7 @@ bool IoniserCluster::refresh_value() {
 }
 
 void IoniserCluster::updated_value(bool state) {
-	dehumidifier_.ioniser(state);
+	dehumidifier_.set_ioniser(state);
 }
 
 } // namespace dehumidifier

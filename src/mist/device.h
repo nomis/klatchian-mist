@@ -35,6 +35,7 @@ namespace mist {
 
 class Dehumidifier;
 class Device;
+class SerialIO;
 class UserInterface;
 
 namespace device {
@@ -186,7 +187,7 @@ private:
 
 class Device: public WakeupThread, public ZigbeeListener {
 public:
-	explicit Device(UserInterface &ui, gpio_num_t rx_pin, gpio_num_t tx_pin);
+	explicit Device(UserInterface &ui, SerialIO &comms, gpio_num_t rx_pin, gpio_num_t tx_pin);
 	~Device() = delete;
 
 	// cppcheck-suppress duplInheritedMember
@@ -197,10 +198,13 @@ public:
 	static constexpr const size_t MAX_STRING_LENGTH = 70;
 
 	void attach(std::vector<std::reference_wrapper<ZigbeeEndpoint>> &&endpoints);
+	void init();
 	void start();
-	// void request_refresh(const Dehumidifier &dehumidifier);
+	void request_refresh();
 
 	inline UserInterface& ui() { return ui_; };
+	inline SerialIO& comms() { return comms_; };
+	inline Dehumidifier& dehumidifier() { return dehumidifier_; };
 	void join_network();
 	void join_or_leave_network();
 	void leave_network();
@@ -234,6 +238,7 @@ private:
 	unsigned long run_tasks() override;
 
 	UserInterface &ui_;
+	SerialIO &comms_;
 	ZigbeeDevice &zigbee_;
 	const esp_partition_t *part_current_;
 	const esp_partition_t *part_next_;

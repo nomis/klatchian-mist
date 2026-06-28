@@ -51,11 +51,11 @@ extern "C" void app_main() {
 	ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_LEVEL2));
 
 	auto &ui = *new UserInterface{logging, GPIO_NUM_4, true};
-	auto &device = *new Device{ui, GPIO_NUM_2, GPIO_NUM_3};
 	auto &comms = *new SerialIO{GPIO_NUM_10, GPIO_NUM_11};
+	auto &device = *new Device{ui, comms, GPIO_NUM_2, GPIO_NUM_3};
 
 	ESP_ERROR_CHECK(esp_task_wdt_reset());
-	device.start();
+	device.init();
 
 	ui.attach(device);
 	ui.start();

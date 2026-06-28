@@ -50,9 +50,9 @@ using namespace std::chrono_literals;
 
 namespace mist {
 
-Device::Device(UserInterface &ui, gpio_num_t rx_pin, gpio_num_t tx_pin)
-		: WakeupThread("Device", true), ui_(ui),
-		zigbee_(*new ZigbeeDevice{*this}),
+Device::Device(UserInterface &ui, SerialIO &comms, gpio_num_t rx_pin,
+		gpio_num_t tx_pin) : WakeupThread("Device", true),
+		ui_(ui), comms_(comms), zigbee_(*new ZigbeeDevice{*this}),
 		basic_cl_(*this, "uuid.uk", "klatchian-mist",
 			"https://github.com/nomis/klatchian-mist"),
 		identify_cl_(ui_), dehumidifier_(*new Dehumidifier{rx_pin, tx_pin}) {
@@ -123,30 +123,30 @@ Device::Device(UserInterface &ui, gpio_num_t rx_pin, gpio_num_t tx_pin)
 }
 
 void Device::attach(std::vector<std::reference_wrapper<ZigbeeEndpoint>> &&endpoints) {
-	// dehumidifiers_.emplace(dehumidifier.index(), dehumidifier);
-	// dehumidifier_tasks_.emplace(dehumidifier.index(),
-	// 		std::make_shared<std::function<void()>>([&dehumidifier] {
-	// 	ESP_LOGD(TAG, "Refresh dehumidifier %u", dehumidifier.index());
-	// 	dehumidifier.refresh();
-	// }));
-
 	for (auto ep : endpoints)
 		zigbee_.add(ep);
 }
 
-void Device::start() {
+void Device::init() {
 	zigbee_.start();
 	uptime_cl_.update(core_dump_present_);
 	zigbee_.schedule_after(uptime_task_, std::chrono::milliseconds(1min).count());
+}
 
+void Device::start() {
 	std::thread t;
 	make_thread(t, "device_main", 4096, 19, &Device::run_loop, this);
 	t.detach();
 }
 
-// void Device::request_refresh(const Light &light) {
-// 	zigbee_.reschedule(dehumidifier_tasks_.at(dehumidifier.index()));
-// }
+void Device::request_refresh() {
+	zigbee_.reschedule(
+		std::make_shared<std::function<void()>>([this] {
+			ESP_LOGD(TAG, "Refresh dehumidifier");
+			dehumidifier_.refresh();
+		})
+	);
+}
 
 void Device::join_network() {
 	zigbee_.join_network();

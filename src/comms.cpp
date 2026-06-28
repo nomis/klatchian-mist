@@ -31,14 +31,17 @@
 #include <soc/uart_pins.h>
 #include <string.h>
 
+#include <chrono>
 #include <cstring>
 #include <deque>
 #include <memory>
 #include <thread>
 #include <vector>
 
+#include "mist/dehumidifier.h"
 #include "mist/device.h"
 #include "mist/log.h"
+#include "zcl/esp_zigbee_zcl_dehumidification_control.h"
 
 namespace mist {
 
@@ -82,6 +85,90 @@ void SerialIO::start() {
 	t.detach();
 }
 
+void SerialIO::set_power(bool state) {
+	std::unique_lock lock{mutex_};
+
+	set_state_.set_power = true;
+	set_state_.power = state;
+	set_state_busy_ = SetState::PENDING;
+	wake_up();
+}
+
+void SerialIO::set_mode(dehumidifier::Mode mode) {
+	std::unique_lock lock{mutex_};
+
+	switch (mode) {
+	case dehumidifier::Mode::Unknown:
+		break;
+
+	case dehumidifier::Mode::SetPoint:
+		set_state_.set_mode = true;
+		set_state_.mode = 1;
+		break;
+
+	case dehumidifier::Mode::Continuous:
+		set_state_.set_mode = true;
+		set_state_.mode = 2;
+		break;
+
+	case dehumidifier::Mode::Smart:
+		set_state_.set_mode = true;
+		set_state_.mode = 3;
+		break;
+
+	case dehumidifier::Mode::ClothesDrying:
+		set_state_.set_mode = true;
+		set_state_.mode = 4;
+		break;
+	}
+	set_state_busy_ = SetState::PENDING;
+	wake_up();
+}
+
+void SerialIO::set_fan_speed(dehumidifier::Fan speed) {
+	std::unique_lock lock{mutex_};
+
+	switch (speed) {
+	case dehumidifier::Fan::Unknown:
+		break;
+
+	case dehumidifier::Fan::Low:
+		set_state_.set_fan_speed = true;
+		set_state_.fan_speed = 40;
+		break;
+
+	case dehumidifier::Fan::Medium:
+		set_state_.set_fan_speed = true;
+		set_state_.fan_speed = 60;
+		break;
+
+	case dehumidifier::Fan::High:
+		set_state_.set_fan_speed = true;
+		set_state_.fan_speed = 80;
+		break;
+	}
+	set_state_busy_ = SetState::PENDING;
+	wake_up();
+}
+
+void SerialIO::set_humidity_setpoint(int humidity) {
+	std::unique_lock lock{mutex_};
+
+	set_state_.set_humidity_setpoint = true;
+	set_state_.humidity_setpoint = humidity;
+	set_state_busy_ = SetState::PENDING;
+	wake_up();
+}
+
+void SerialIO::set_ioniser(bool state) {
+	std::unique_lock lock{mutex_};
+
+	set_state_.set_ioniser = true;
+	set_state_.ioniser = state;
+	set_state_busy_ = SetState::PENDING;
+	wake_up();
+}
+
 unsigned long SerialIO::run_tasks() {
 	{
 		std::unique_lock lock{mutex_};
@@ -92,6 +179,16 @@ unsigned long SerialIO::run_tasks() {
 				lock.unlock();
 			}
 			tx_network_status();
+		}
+
+		if (set_state_busy_ == SetState::PENDING && state_.valid) {
+			set_state_busy_ = SetState::SENT;
+			prepare_set_state();
+			if (lock) {
+				lock.unlock();
+			}
+			tx_set_state();
+			tx_request_state_us_ = 0;
 		}
 	}
 
@@ -192,25 +289,31 @@ void SerialIO::parse_message() {
 		rx_parse_state();
 	} else if (valid && type == 0x03 && rx_buf_[10] == 0x63) {
 		debug_message("<-", &rx_buf_[0], rx_buf_[1] + 1, "Network status request");
-		{
-			std::lock_guard lock{mutex_};
 
-			tx_network_status_ = true;
-		}
+		std::lock_guard lock{mutex_};
+
+		tx_network_status_ = true;
 		wake_up();
 	} else if ((valid || (rx_buf_[10 + length] == 0 && checksum))
 			&& type == 0x64 && rx_buf_[10] == 0x00 && length >= 6
 			&& rx_buf_[11] == 0x01 && rx_buf_[15] == 0x01) {
 		/* This message will be sent 3 times and the CRC8 is invalid (0x00) */
 		debug_message("<-", &rx_buf_[0], rx_buf_[1] + 1, "WiFi reset");
-		device_->join_network();
+		if (state_.valid) {
+			device_->join_network();
+		}
 	}
 }
 
 void SerialIO::rx_parse_state() {
+	std::unique_lock lock{mutex_};
+	bool start = false;
+
 	request_state_busy_ = false;
 
-	std::lock_guard lock{mutex_};
+	if (set_state_busy_ == SetState::SENT) {
+		set_state_busy_ = SetState::NONE;
+	}
 
 	state_.power = rx_buf_[11] & 0x01;
 	state_.mode = rx_buf_[12] & 0x0F;
@@ -225,12 +328,76 @@ void SerialIO::rx_parse_state() {
 	state_.temperature_c = ((int)rx_buf_[27] - 50) / 2.0;
 	state_.temperature_c += ((state_.temperature_c >= 0) ? 0.0 : -1.0) * (rx_buf_[28] & 0xF) * 0.1;
 	state_.bucket_full = rx_buf_[31] == 38;
+	start = !state_.valid;
+	state_.valid = true;
 
-	ESP_LOGI(TAG, "State: power=%u mode=%u fan_speed=%u timer=%u on_timer_mins=%u off_timer_mins=%u humidity_setpoint=%u ioniser=%u auto_defrost=%u humidity_reading=%u temperature_c=%.1f error_code=%u",
+	ESP_LOGI(TAG, "State: power=%u mode=%u fan_speed=%u timer=%u on_timer_mins=%u off_timer_mins=%u humidity_setpoint=%u ioniser=%u auto_defrost=%u humidity_reading=%u temperature_c=%.1f bucket_full=%u",
 		state_.power, state_.mode, state_.fan_speed, state_.timer,
 		state_.on_timer_mins, state_.off_timer_mins, state_.humidity_setpoint,
 		state_.ioniser, state_.auto_defrost, state_.humidity_reading,
 		state_.temperature_c, state_.bucket_full);
+
+	if (start) {
+		lock.unlock();
+		update_state();
+		device_->start();
+	} else {
+		if (set_state_busy_ == SetState::NONE) {
+			lock.unlock();
+			update_state();
+		}
+	}
+}
+
+void SerialIO::update_state() {
+	device_->dehumidifier().update_power(state_.power);
+
+	switch (state_.mode) {
+	case 1:
+		device_->dehumidifier().update_mode(dehumidifier::Mode::SetPoint);
+		break;
+
+	case 2:
+		device_->dehumidifier().update_mode(dehumidifier::Mode::Continuous);
+		break;
+
+	case 3:
+		device_->dehumidifier().update_mode(dehumidifier::Mode::Smart);
+		break;
+
+	case 4:
+		device_->dehumidifier().update_mode(dehumidifier::Mode::ClothesDrying);
+		break;
+
+	default:
+		device_->dehumidifier().update_mode(dehumidifier::Mode::Unknown);
+		break;
+	}
+
+	switch (state_.fan_speed) {
+	case 40:
+		device_->dehumidifier().update_fan_speed(dehumidifier::Fan::Low);
+		break;
+
+	case 60:
+		device_->dehumidifier().update_fan_speed(dehumidifier::Fan::Medium);
+		break;
+
+	case 80:
+		device_->dehumidifier().update_fan_speed(dehumidifier::Fan::High);
+		break;
+
+	default:
+		device_->dehumidifier().update_fan_speed(dehumidifier::Fan::Unknown);
+		break;
+	}
+
+	device_->dehumidifier().update_humidity_setpoint(state_.humidity_setpoint);
+	device_->dehumidifier().update_ioniser(state_.ioniser);
+	device_->dehumidifier().update_auto_defrost(state_.auto_defrost);
+	device_->dehumidifier().update_humidity_reading(state_.humidity_reading);
+	device_->dehumidifier().update_temperature(state_.temperature_c);
+	device_->dehumidifier().update_bucket_full(state_.bucket_full);
 }
 
 uint8_t SerialIO::calc_crc8(const uint8_t *data, size_t size) {
@@ -291,7 +458,8 @@ uint8_t SerialIO::calc_checksum(const uint8_t *data, size_t size) {
 
 void SerialIO::tx_message(uint8_t version, uint8_t type,
 		const std::vector<uint8_t> &data, const char *desc) {
-	std::vector<uint8_t> message(10 + data.size() + 2);
+	using namespace std::chrono_literals;
+	std::vector<uint8_t> message(10 + data.size() + 2 + 1);
 
 	message[0] = 0xAA;
 	message[1] = 10 + data.size() + 1;
@@ -302,10 +470,13 @@ void SerialIO::tx_message(uint8_t version, uint8_t type,
 	std::memcpy(&message[10], &data[0], data.size());
 	message[10 + data.size()] = calc_crc8(&data[0], data.size());
 	message[10 + data.size() + 1] = calc_checksum(&message[1], 10 + data.size());
+	message[10 + data.size() + 2] = 0x0A;
 
 	debug_message("->", &message[0], message.size(), desc);
 
 	uart_write_bytes(UART_NUM_1, &message[0], message.size());
+	std::this_thread::sleep_for(
+		std::chrono::microseconds(message.size() * 1s) / 9600 + 100ms);
 }
 
 void SerialIO::tx_request_state() {
@@ -331,6 +502,40 @@ void SerialIO::tx_network_status() {
 	};
 
 	tx_message(0x03, 0x0D, false ? connected_data : disconnected_data, "Network status");
+}
+
+void SerialIO::prepare_set_state() {
+	set_state_.data.resize(25);
+	set_state_.data[0] = 0x48;
+	if (set_state_.set_power) {
+		set_state_.data[1] = set_state_.power ? 0x01 : 0x00;
+	} else {
+		set_state_.data[1] = state_.power;
+	}
+	if (set_state_.set_mode) {
+		set_state_.data[2] = set_state_.mode & 0x0F;
+	} else {
+		set_state_.data[2] = state_.mode & 0x0F;
+	}
+	if (set_state_.set_fan_speed) {
+		set_state_.data[3] = set_state_.fan_speed & 0x7F;
+	} else {
+		set_state_.data[3] = state_.fan_speed & 0x7F;
+	}
+	if (set_state_.set_humidity_setpoint) {
+		set_state_.data[7] = set_state_.humidity_setpoint;
+	} else {
+		set_state_.data[7] = state_.humidity_setpoint;
+	}
+	if (set_state_.set_ioniser) {
+		set_state_.data[9] = set_state_.ioniser ? 0x40 : 0x00;
+	} else {
+		set_state_.data[9] = state_.ioniser ? 0x40 : 0x00;
+	}
+}
+
+void SerialIO::tx_set_state() {
+	tx_message(0x03, 0x02, set_state_.data, "Set state");
 }
 
 void SerialIO::debug_message(const char *direction, const uint8_t *data,

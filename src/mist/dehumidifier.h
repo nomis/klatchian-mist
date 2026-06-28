@@ -271,11 +271,21 @@ public:
 	float temperature() const;
 	bool ioniser() const;
 
-	void power(bool state);
-	void mode(dehumidifier::Mode mode);
-	void fan_speed(dehumidifier::Fan speed);
-	void humidity_setpoint(int humidity);
-	void ioniser(bool state);
+	void update_power(bool state);
+	void update_auto_defrost(bool state);
+	void update_bucket_full(bool state);
+	void update_mode(dehumidifier::Mode mode);
+	void update_fan_speed(dehumidifier::Fan speed);
+	void update_humidity_reading(int humidity);
+	void update_humidity_setpoint(int humidity);
+	void update_temperature(float temperature);
+	void update_ioniser(bool state);
+
+	void set_power(bool state);
+	void set_mode(dehumidifier::Mode mode);
+	void set_fan_speed(dehumidifier::Fan speed);
+	void set_humidity_setpoint(int humidity);
+	void set_ioniser(bool state);
 
 private:
 	static constexpr const ep_id_t POWER_SWITCH_EP_ID = 10;

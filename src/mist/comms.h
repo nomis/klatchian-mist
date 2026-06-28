@@ -25,15 +25,18 @@
 #include <mutex>
 #include <vector>
 
+#include "dehumidifier.h"
 #include "thread.h"
 
 namespace mist {
 
 class Device;
 
-namespace comms {
-
-} // namespace comms
+enum class SetState {
+	NONE,
+	PENDING,
+	SENT,
+};
 
 class SerialIO: public WakeupThread {
 public:
@@ -45,6 +48,12 @@ public:
 
 	void attach(Device &device);
 	void start();
+
+	void set_power(bool state);
+	void set_mode(dehumidifier::Mode mode);
+	void set_fan_speed(dehumidifier::Fan speed);
+	void set_humidity_setpoint(int humidity);
+	void set_ioniser(bool state);
 
 private:
 	static constexpr const unsigned long REFRESH_INTERVAL_US = 1 * 1000 * 1000;
@@ -62,16 +71,21 @@ private:
 	void tx_message(uint8_t version, uint8_t type, const std::vector<uint8_t> &data, const char *desc);
 	void tx_request_state();
 	void tx_network_status();
+	void prepare_set_state();
+	void tx_set_state();
 
 	void debug_message(const char *direction, const uint8_t *data, size_t size, const char *desc);
+
+	void update_state();
 
 	Device *device_{nullptr};
 
 	std::deque<uint8_t> rx_buf_;
 	uint64_t tx_request_state_us_{0};
-	bool request_state_busy_{false};
 
 	std::mutex mutex_;
+	bool request_state_busy_{false};
+	SetState set_state_busy_{SetState::NONE};
 	struct {
 		bool power;
 		uint8_t mode;
@@ -85,7 +99,21 @@ private:
 		bool auto_defrost;
 		float temperature_c;
 		bool bucket_full;
-	} state_;
+		bool valid;
+	} state_{};
+	struct {
+		std::vector<uint8_t> data;
+		bool set_power;
+		bool power;
+		bool set_mode;
+		uint8_t mode;
+		bool set_fan_speed;
+		uint8_t fan_speed;
+		bool set_humidity_setpoint;
+		uint8_t humidity_setpoint;
+		bool set_ioniser;
+		bool ioniser;
+	} set_state_{};
 	bool tx_network_status_{false};
 };
 
