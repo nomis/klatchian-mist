@@ -101,9 +101,9 @@ unsigned long Dehumidifier::run() {
 	return ULONG_MAX;
 }
 
-bool Dehumidifier::power_on() const {
+bool Dehumidifier::power() const {
 	std::lock_guard lock{mutex_};
-	return power_on_;
+	return power_;
 }
 
 bool Dehumidifier::auto_defrost() const {
@@ -136,16 +136,16 @@ int Dehumidifier::humidity_setpoint() const {
 	return humidity_setpoint_;
 }
 
-bool Dehumidifier::ioniser_on() const {
+bool Dehumidifier::ioniser() const {
 	std::lock_guard lock{mutex_};
-	return ioniser_on_;
+	return ioniser_;
 }
 
-void Dehumidifier::power_on(bool state) {
+void Dehumidifier::power(bool state) {
 	std::lock_guard lock{mutex_};
 
-	ESP_LOGD(TAG, "Set power on %d -> %d", power_on_, state);
-	power_on_ = state;
+	ESP_LOGD(TAG, "Set power %d -> %d", power_, state);
+	power_ = state;
 	device_->ui().remote_control();
 }
 
@@ -173,11 +173,11 @@ void Dehumidifier::humidity_setpoint(int humidity) {
 	device_->ui().remote_control();
 }
 
-void Dehumidifier::ioniser_on(bool state) {
+void Dehumidifier::ioniser(bool state) {
 	std::lock_guard lock{mutex_};
 
-	ESP_LOGD(TAG, "Set ioniser on %d -> %d", ioniser_on_, state);
-	ioniser_on_ = state;
+	ESP_LOGD(TAG, "Set ioniser %d -> %d", ioniser_, state);
+	ioniser_ = state;
 	device_->ui().remote_control();
 }
 
@@ -384,11 +384,11 @@ void PowerSwitchCluster::configure_cluster_list(esp_zb_cluster_list_t &cluster_l
 }
 
 bool PowerSwitchCluster::refresh_value() {
-	return dehumidifier_.power_on();
+	return dehumidifier_.power();
 }
 
 void PowerSwitchCluster::updated_value(bool state) {
-	dehumidifier_.power_on(state);
+	dehumidifier_.power(state);
 }
 
 AutoDefrostCluster::AutoDefrostCluster(Dehumidifier &dehumidifier)
@@ -570,11 +570,11 @@ void IoniserCluster::configure_cluster_list(esp_zb_cluster_list_t &cluster_list)
 }
 
 bool IoniserCluster::refresh_value() {
-	return dehumidifier_.ioniser_on();
+	return dehumidifier_.ioniser();
 }
 
 void IoniserCluster::updated_value(bool state) {
-	dehumidifier_.ioniser_on(state);
+	dehumidifier_.ioniser(state);
 }
 
 } // namespace dehumidifier

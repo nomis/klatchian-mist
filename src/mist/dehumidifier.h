@@ -249,20 +249,20 @@ public:
 	unsigned long run();
 	void refresh();
 
-	bool power_on() const;
+	bool power() const;
 	bool auto_defrost() const;
 	bool bucket_full() const;
 	dehumidifier::Mode mode() const;
 	dehumidifier::Fan fan_speed() const;
 	int humidity_reading() const;
 	int humidity_setpoint() const;
-	bool ioniser_on() const;
+	bool ioniser() const;
 
-	void power_on(bool state);
+	void power(bool state);
 	void mode(dehumidifier::Mode mode);
 	void fan_speed(dehumidifier::Fan speed);
 	void humidity_setpoint(int humidity);
-	void ioniser_on(bool state);
+	void ioniser(bool state);
 
 private:
 	static constexpr const ep_id_t POWER_SWITCH_EP_ID = 10;
@@ -275,14 +275,14 @@ private:
 	static constexpr const ep_id_t IONISER_EP_ID = 40;
 
 	mutable std::mutex mutex_;
-	bool power_on_{false};
+	bool power_{false};
 	bool auto_defrost_{false};
 	bool bucket_full_{false};
 	dehumidifier::Mode mode_{0};
 	dehumidifier::Fan fan_speed_{0};
 	int humidity_reading_{0};
 	int humidity_setpoint_{0};
-	bool ioniser_on_{false};
+	bool ioniser_{false};
 
 	dehumidifier::PowerSwitchCluster &power_switch_cl_;
 	dehumidifier::AutoDefrostCluster &auto_defrost_cl_;

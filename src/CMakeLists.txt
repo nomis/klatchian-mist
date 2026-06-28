@@ -1,6 +1,7 @@
 idf_component_register(
     SRCS
 		base64.cpp
+		comms.cpp
 		debounce.cpp
 		dehumidifier.cpp
 		device.cpp
