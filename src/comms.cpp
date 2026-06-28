@@ -198,8 +198,10 @@ void SerialIO::parse_message() {
 			tx_network_status_ = true;
 		}
 		wake_up();
-	} else if (checksum && type == 0x64 && rx_buf_[10] == 0x00
-			&& length >= 6 && rx_buf_[11] == 0x01 && rx_buf_[15] == 0x01) {
+	} else if ((valid || (rx_buf_[10 + length] == 0 && checksum))
+			&& type == 0x64 && rx_buf_[10] == 0x00 && length >= 6
+			&& rx_buf_[11] == 0x01 && rx_buf_[15] == 0x01) {
+		/* This message will be sent 3 times and the CRC8 is invalid (0x00) */
 		debug_message("<-", &rx_buf_[0], rx_buf_[1] + 1, "WiFi reset");
 		device_->join_network();
 	}
@@ -232,6 +234,7 @@ void SerialIO::rx_parse_state() {
 }
 
 uint8_t SerialIO::calc_crc8(const uint8_t *data, size_t size) {
+	/* CRC-8-Dallas/Maxim (0x31) */
 	static const uint8_t crc_table[] = {
 		0x00, 0x5E, 0xBC, 0xE2, 0x61, 0x3F, 0xDD, 0x83,
 		0xC2, 0x9C, 0x7E, 0x20, 0xA3, 0xFD, 0x1F, 0x41,
